@@ -29,45 +29,16 @@ if __name__=="__main__":
         dhdt = (qin-action*qout)/A_tank
         return dhdt
 
-    # class tank_env(Env):
-    #     def __init__(self):
-    #         self.action_space = Discrete(2)
-    #         self.observation_space = Box(0, 100, shape=(1,))
-    #         self.max_length = 1000
-    #         self.state = 10 + random.randint(-2,2)
-    #     def step(self, action):
-    #         tn = np.linspace(0, 1, 2)
-    #         sol = odeint(height_model, self.state, tn, args=(action,))
-    #         self.state = sol[-1]
-    #         self.max_length-=1
-    #         reward=0
-    #         if self.state<=0 or self.state>=100:
-    #             done=True
-    #         elif self.max_length<=0:
-    #             done=True
-    #         elif self.state<12 and self.state>8:
-    #             done=False
-    #             reward = + 1
-    #         else:
-    #             done=False
-    #             reward = 0
-    #         info={}
-    #         return self.state, reward, done, info
-            
-    #     def render(self):
-    #         pass
-    #     def reset(self):
-    #         self.state = np.array([10 + random.randint(-2,2)]).astype(float)
-    #         self.max_length = 1000
-    #         return self.state
-
     class tank_env(Env):
-        def __init__(self, set_point):
+        def __init__(self, set_point=None):
             self.action_space = Discrete(2)
-            self.observation_space = Box(0, 100, shape=(1,))
+            self.observation_space = Box(0, 100, shape=(2,))
             self.max_length = 1000
-            self.set_point = set_point
-            self.state = np.array([10+random.randint(-2,2), self.set_point])
+            if set_point==None:
+                self.set_point = random.randint(20,80)
+            else:
+                self.set_point=set_point
+            self.state = np.array([random.randint(20,80), self.set_point])
             
         def step(self, action):
             tn = np.linspace(0, 1, 2)
@@ -75,11 +46,11 @@ if __name__=="__main__":
             self.state = np.array([sol[-1], self.set_point]).astype(dtype=float)
             self.max_length-=1
             reward=0
-            if self.state[0]<=0 or self.state[0]>=100:
+            if self.state[0]<=0.0 or self.state[0]>=100.0:
                 done=True
             elif self.max_length<=0:
                 done=True
-            elif self.state[0]<(self.set_point+2) and self.state[0]>(self.set_point-2):
+            elif self.state[0]<=(self.set_point+2) and self.state[0]>=(self.set_point-2):
                 done=False
                 reward = + 1
             else:
@@ -90,13 +61,17 @@ if __name__=="__main__":
             
         def render(self):
             pass
-        def reset(self):
-            self.state = np.array([10 + random.randint(-2,2), self.set_point]).astype(dtype=float)
+        def reset(self, set_point=None):
+            self.state = np.array([random.randint(20,80), self.set_point]).astype(dtype=float)
             self.max_length = 1000
+            if set_point==None:
+                self.set_point = random.randint(20,80)
+            else:
+                self.set_point=set_point
             return self.state
 
-    env=tank_env(set_point=10.0)
 
+    env = tank_env()
 
     agent = Agent(gamma=0.99, epsilon=1.0, batch_size=32, n_actions=2, eps_end=0.01, input_dims=[2], lr=0.001)
     scores, eps_history = [], []
